@@ -1,13 +1,17 @@
 package it2a.clarence.pets;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 
 public class config {
-   
+    
+    //Connection Method to SQLITE
     //Connection Method to SQLITE
 public static Connection connectDB() {
         Connection con = null;
@@ -15,15 +19,20 @@ public static Connection connectDB() {
             Class.forName("org.sqlite.JDBC"); // Load the SQLite JDBC driver
             con = DriverManager.getConnection("jdbc:sqlite:Pets.db"); // Establish connection
             System.out.println("Connection Successful");
-        } catch (Exception e) {
+        } catch (ClassNotFoundException | SQLException e) {
             System.out.println("Connection Failed: " + e);
         }
         return con;
     }
-    
 
-public void addRecord(String sql, Object... values) {
-    try (Connection conn = this.connectDB(); // Use the connectDB method
+    static config updateBalance(String sql, String name) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+ 
+    
+    public void addRecord(String sql, Object... values) {
+     try (Connection conn = config.connectDB(); // Use the connectDB method
          PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
         // Loop through the values and set them in the prepared statement dynamically
@@ -49,15 +58,18 @@ public void addRecord(String sql, Object... values) {
             }
         }
 
-        pstmt.executeUpdate();
-        System.out.println("Record added successfully!");
-    } catch (SQLException e) {
-        System.out.println("Error adding record: " + e.getMessage());
+            pstmt.executeUpdate();
+            System.out.println("Record added successfully!");
+        } catch (SQLException e) {
+            System.out.println("Error adding record: " + e.getMessage());
+        }
     }
-}
     
-
-    // Dynamic view method to display records from any table
+    //---------------------------------------------------------------------------------------------------------------
+    //VIEW METHOD
+    //---------------------------------------------------------------------------------------------------------------
+    
+     
     public void viewRecords(String sqlQuery, String[] columnHeaders, String[] columnNames) {
         // Check that columnHeaders and columnNames arrays are the same length
         if (columnHeaders.length != columnNames.length) {
@@ -65,17 +77,17 @@ public void addRecord(String sql, Object... values) {
             return;
         }
 
-        try (Connection conn = this.connectDB();
+        try (Connection conn = config.connectDB();
              PreparedStatement pstmt = conn.prepareStatement(sqlQuery);
              ResultSet rs = pstmt.executeQuery()) {
 
             // Print the headers dynamically
             StringBuilder headerLine = new StringBuilder();
-            headerLine.append("--------------------------------------------------------------------------------------------------------------------------------------------\n| ");
+            headerLine.append("--------------------------------------------------------------------------------------------------------------------\n| ");
             for (String header : columnHeaders) {
                 headerLine.append(String.format("%-20s | ", header)); // Adjust formatting as needed
             }
-            headerLine.append("\n-------------------------------------------------------------------------------------------------------------------------------------------");
+            headerLine.append("\n-------------------------------------------------------------------------------------------------------------------");
 
             System.out.println(headerLine.toString());
 
@@ -88,20 +100,20 @@ public void addRecord(String sql, Object... values) {
                 }
                 System.out.println(row.toString());
             }
-            System.out.println("--------------------------------------------------------------------------------------------------------------------------------------------");
+            System.out.println("-------------------------------------------------------------------------------------------------------------------");
 
         } catch (SQLException e) {
             System.out.println("Error retrieving records: " + e.getMessage());
         }
     }
-
+    
     
     //-----------------------------------------------
     // UPDATE METHOD
     //-----------------------------------------------
 
     public void updateRecord(String sql, Object... values) {
-        try (Connection conn = this.connectDB(); // Use the connectDB method
+        try (Connection conn = config.connectDB(); // Use the connectDB method
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             // Loop through the values and set them in the prepared statement dynamically
@@ -135,9 +147,13 @@ public void addRecord(String sql, Object... values) {
     }
     
     
+    //-----------------------------------------------
+    // DELETE METHOD
+    //-----------------------------------------------
+
     // Add this method in the config class
 public void deleteRecord(String sql, Object... values) {
-    try (Connection conn = this.connectDB();
+    try (Connection conn = config.connectDB();
          PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
         // Loop through the values and set them in the prepared statement dynamically
@@ -155,75 +171,57 @@ public void deleteRecord(String sql, Object... values) {
         System.out.println("Error deleting record: " + e.getMessage());
     }
 }
+  
 
+private static void viewTransactionHistory(Connection conn) throws SQLException {
+    String query = "SELECT t.transaction_id, a1.name AS sender, a2.name AS recipient, t.amount, t.transaction_date "
+                 + "FROM transactions t "
+                 + "JOIN accounts a1 ON t.sender_id = a1.id "
+                 + "JOIN accounts a2 ON t.recipient_id = a2.id "
+                 + "ORDER BY t.transaction_date DESC"; // Add ordering for better clarity
 
-  //-----------------------------------------------
-    // Helper Method for Setting PreparedStatement Values
-    //-----------------------------------------------
-    private void setPreparedStatementValues(PreparedStatement pstmt, Object... values) throws SQLException {
-        for (int i = 0; i < values.length; i++) {
-            if (values[i] instanceof Integer) {
-                pstmt.setInt(i + 1, (Integer) values[i]);
-            } else if (values[i] instanceof Double) {
-                pstmt.setDouble(i + 1, (Double) values[i]);
-            } else if (values[i] instanceof Float) {
-                pstmt.setFloat(i + 1, (Float) values[i]);
-            } else if (values[i] instanceof Long) {
-                pstmt.setLong(i + 1, (Long) values[i]);
-            } else if (values[i] instanceof Boolean) {
-                pstmt.setBoolean(i + 1, (Boolean) values[i]);
-            } else if (values[i] instanceof java.util.Date) {
-                pstmt.setDate(i + 1, new java.sql.Date(((java.util.Date) values[i]).getTime()));
-            } else if (values[i] instanceof java.sql.Date) {
-                pstmt.setDate(i + 1, (java.sql.Date) values[i]);
-            } else if (values[i] instanceof java.sql.Timestamp) {
-                pstmt.setTimestamp(i + 1, (java.sql.Timestamp) values[i]);
-            } else {
-                pstmt.setString(i + 1, values[i].toString());
-            }
+    try (PreparedStatement stmt = conn.prepareStatement(query);
+         ResultSet rs = stmt.executeQuery()) {
+
+        System.out.println("Transaction History:");
+        if (!rs.next()) {
+            System.out.println("No transactions found.");
+            return; // No transactions
         }
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // Customize the format
+
+        do {
+            int transactionId = rs.getInt("transaction_id");
+            String sender = rs.getString("sender");
+            String recipient = rs.getString("recipient");
+            double amount = rs.getDouble("amount");
+            String rawDate = rs.getString("transaction_date");
+
+            // Convert raw date string to Date and format it
+            try {
+                Date transactionDate = (Date) dateFormat.parse(rawDate);
+                String formattedDate = dateFormat.format(transactionDate);
+                System.out.println("Transaction ID: " + transactionId 
+                                   + ", Sender: " + sender 
+                                   + ", Recipient: " + recipient 
+                                   + ", Amount: $" + amount 
+                                   + ", Date: " + formattedDate);
+            } catch (ParseException e) {
+                System.out.println("Error formatting date: " + rawDate);
+            }
+
+        } while (rs.next());
     }
-
-  //-----------------------------------------------
-    // GET SINGLE VALUE METHOD
-    //-----------------------------------------------
-
-    public double getSingleValue(String sql, Object... params) {
-        double result = 0.0;
-        try (Connection conn = connectDB();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            setPreparedStatementValues(pstmt, params);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                result = rs.getDouble(1);
-            }
-
-        } catch (SQLException e) {
-            System.out.println("Error retrieving single value: " + e.getMessage());
-        }
-        return result;
-    }
-
-
-
-
-    /*public double numValid(Scanner sc) {
-        double value;
-        while (true) {
-            System.out.print("Enter a valid number: ");
-            if (sc.hasNextDouble()) { // Check if the next input is a double
-                value = sc.nextDouble();
-                break; // Exit the loop if input is valid
-            } else {
-                System.out.println("Invalid input. Please enter a number.");
-                sc.next(); // Clear invalid input
-            }
-        }
-        return value;
-    }*/
-    
-
-
-
 }
+
+    int getSingleValue(String sql, int oid) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    
+}
+
+
+
+
