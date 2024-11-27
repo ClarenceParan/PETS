@@ -261,37 +261,40 @@ public class main {
     }
 
     // View adoption history
-    private static void viewAdoptionHistory(Connection conn) throws SQLException {
-        String query = "SELECT ah.adoption_id, p.name AS pet_name, p.species, p.breed, p.age, p.gender, "
-                + "ah.adopter_name, ah.adopter_age, ah.adopter_address, ah.adopter_contact_number, ah.adoption_date "
-                + "FROM adoption_history ah "
-                + "JOIN pets p ON ah.pet_id = p.id";
-        try (PreparedStatement stmt = conn.prepareStatement(query);
-             ResultSet rs = stmt.executeQuery()) {
+   private static void viewAdoptionHistory(Connection conn) throws SQLException {
+    String query = "SELECT ah.adoption_id, p.name AS pet_name, p.species, p.breed, p.age, p.gender, "
+            + "ah.adopter_name, ah.adopter_age, ah.adopter_address, ah.adopter_contact_number, ah.adoption_date "
+            + "FROM adoption_history ah "
+            + "JOIN pets p ON ah.pet_id = p.id";
+    
+    try (PreparedStatement stmt = conn.prepareStatement(query);
+         ResultSet rs = stmt.executeQuery()) {
 
-            System.out.println("\nAdoption History:");
-            System.out.println("+-----+----------------+---------+---------+-----+--------+------------------+--------------+-------------------+-----------------------+---------------------+");
-            System.out.println("| ID  | Pet Name       | Species | Breed   | Age | Gender | Adopter Name      | Adopter Age | Adopter Address    | Adopter Contact Number | Adoption Date       |");
-            System.out.println("+-----+----------------+---------+---------+-----+--------+------------------+--------------+-------------------+-----------------------+---------------------+");
-            if (!rs.next()) {
-                System.out.println("| No adoption history found.                                                      |");
-            } else {
-                do {
-                    System.out.printf("| %-3d | %-14s | %-7s | %-7s | %-3d | %-6s | %-17s | %-12d | %-17s | %-20s | %-18s |\n",
-                            rs.getInt("adoption_id"),
-                            rs.getString("pet_name"),
-                            rs.getString("species"),
-                            rs.getString("breed"),
-                            rs.getInt("age"),
-                            rs.getString("gender"),
-                            rs.getString("adopter_name"),
-                            rs.getInt("adopter_age"),
-                            rs.getString("adopter_address"),
-                            rs.getString("adopter_contact_number"),
-                            rs.getString("adoption_date"));
-                } while (rs.next());
-            }
-            System.out.println("+-----+----------------+---------+---------+-----+--------+------------------+--------------+-------------------+-----------------------+---------------------+");
+        System.out.println("\nAdoption History:");
+        System.out.println("+-----+----------------+---------+----------------+-----+--------+------------------+--------------+-------------------+-----------------------+---------------------+");
+        System.out.println("| ID  | Pet Name       | Species | Breed          | Age | Gender | Adopter Name      | Adopter Age | Adopter Address    | Adopter Contact Number | Adoption Date       |");
+        System.out.println("+-----+----------------+---------+----------------+-----+--------+------------------+--------------+-------------------+-----------------------+---------------------+");
+
+        if (!rs.next()) {
+            System.out.println("| No adoption history found.                                                                  |");
+        } else {
+            do {
+                System.out.printf("| %-3d | %-14s | %-7s | %-14s | %-3d | %-6s | %-17s | %-12d | %-17s | %-20s | %-18s |\n",
+                        rs.getInt("adoption_id"),
+                        rs.getString("pet_name"),
+                        rs.getString("species"),
+                        rs.getString("breed"),
+                        rs.getInt("age"),
+                        rs.getString("gender"),
+                        rs.getString("adopter_name"),
+                        rs.getInt("adopter_age"),
+                        rs.getString("adopter_address"),
+                        rs.getString("adopter_contact_number"),
+                        rs.getString("adoption_date"));
+            } while (rs.next());
         }
+        
+        System.out.println("+-----+----------------+---------+----------------+-----+--------+------------------+--------------+-------------------+-----------------------+---------------------+");
     }
+}
 }
