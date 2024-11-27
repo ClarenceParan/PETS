@@ -104,14 +104,14 @@ public class main {
              ResultSet rs = stmt.executeQuery()) {
 
             System.out.println("\nAvailable Pets for Adoption:");
-            System.out.println("+-----+----------------+---------+---------+-----+--------+");
-            System.out.println("| ID  | Name           | Species | Breed   | Age | Gender |");
-            System.out.println("+-----+----------------+---------+---------+-----+--------+");
+            System.out.println("+-----+----------------+---------+----------------------+-----+--------+");
+            System.out.println("| ID  | Name           | Species |    Breed             | Age | Gender |");
+            System.out.println("+-----+----------------+---------+----------------------+-----+--------+");
             if (!rs.next()) {
                 System.out.println("| No available pets found.                                |");
             } else {
                 do {
-                    System.out.printf("| %-3d | %-14s | %-7s | %-7s | %-3d | %-6s |\n",
+                    System.out.printf("| %-3d | %-14s | %-7s | %-20s | %-3d | %-6s |\n",
                             rs.getInt("id"),
                             rs.getString("name"),
                             rs.getString("species"),
@@ -120,7 +120,7 @@ public class main {
                             rs.getString("gender"));
                 } while (rs.next());
             }
-            System.out.println("+-----+----------------+---------+---------+-----+--------+");
+            System.out.println("+-----+----------------+---------+----------------------+-----+--------+");
         }
     }
 
